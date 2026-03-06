@@ -7,7 +7,7 @@ COPY . .
 RUN mvn clean package -DskipTests
 
 # ---------- Stage 2 : Runtime ----------
-FROM tomcat:9-jdk17-temurin-alpine
+FROM tomcat:9-jdk17
 
 RUN rm -rf /usr/local/tomcat/webapps/*
 
