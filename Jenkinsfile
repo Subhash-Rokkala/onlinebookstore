@@ -4,7 +4,7 @@ pipeline {
     environment {
         IMAGE_NAME = "subhashrokkala/onlinebookstore"
         CONTAINER_NAME = "onlinebookstore"
-        PORT = "2805"
+        PORT = "2815"
     }
 
     stages {
