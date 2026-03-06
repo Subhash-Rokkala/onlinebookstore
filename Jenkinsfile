@@ -2,38 +2,32 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "subhashrokkala/onlinebookstore"
+        IMAGE_NAME = "subhashrokkala/onlinebookstore"
+        CONTAINER_NAME = "onlinebookstore"
+        PORT = "2805"
     }
 
     stages {
 
         stage('Checkout Code') {
             steps {
-                git branch: 'master', url: 'https://github.com/Subhash-Rokkala/onlinebookstore.git'
-            }
-        }
-
-        stage('Build Maven Package') {
-            steps {
-                sh 'mvn clean package'
+                git branch: 'master', credentialsId: 'gitloginCred', url: 'https://github.com/Subhash-Rokkala/onlinebookstore.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE:latest .'
+                sh 'docker build -t $IMAGE_NAME:latest .'
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Push Image to DockerHub') {
             steps {
-                withCredentials([usernamePassword(
-                credentialsId: 'dockerhub-creds',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS')]) {
-
-                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
-                    sh 'docker push $DOCKER_IMAGE:latest'
+                withCredentials([usernamePassword(credentialsId: 'dockerhubCred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh '''
+                    echo $PASS | docker login -u $USER --password-stdin
+                    docker push $IMAGE_NAME:latest
+                    '''
                 }
             }
         }
@@ -41,11 +35,12 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 sh '''
-                docker stop onlinebookstore || true
-                docker rm onlinebookstore || true
-                docker run -d -p 2805:8080 --name onlinebookstore $DOCKER_IMAGE:latest
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
+                docker run -d -p $PORT:8080 --name $CONTAINER_NAME $IMAGE_NAME:latest
                 '''
             }
         }
+
     }
 }
